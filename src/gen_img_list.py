@@ -5,7 +5,7 @@ from torchvision import transforms
 import numpy as np
 from tqdm import tqdm
 from de_feat_cal import de_feat_cal
-from dataset import EEGImageNetDataset
+from mdataset import EEGImageNetDataset
 from model.mlp_sd import MLPMapper
 from utilities import *
 
@@ -22,10 +22,18 @@ if __name__ == '__main__':
     print(args)
 
     dataset = EEGImageNetDataset(args)
+    with open(os.path.join(args.output_dir, f"ommitted{args.subject}.txt"), "w") as f:
+        dataset.use_image_label = True
+        for data in dataset:
+            if data[0] == None:
+                f.write(f"{data[1]}\n")
+    dataset.cleanup_invalid_data()
+
     with open(os.path.join(args.output_dir, f"s{args.subject}.txt"), "w") as f:
         dataset.use_image_label = True
         for data in dataset:
             f.write(f"{data[1]}\n")
+
     with open(os.path.join(args.output_dir, f"s{args.subject}_label.txt"), "w") as f:
         dataset.use_image_label = False
         for idx, data in enumerate(dataset):
