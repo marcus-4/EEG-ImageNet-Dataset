@@ -4,7 +4,6 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset
 
-
 class EEGImageNetDataset(Dataset):
     def __init__(self, args, transform=None):
         self.dataset_dir = args.dataset_dir
@@ -30,47 +29,46 @@ class EEGImageNetDataset(Dataset):
         self.frequency_feat = None
         self.use_image_label = False
 
+        # Store invalid indices for removal
+        self.invalid_indices = []
+
     def __getitem__(self, index):
         if self.use_image_label:
             path = self.data[index]["image"]
-            #
-            #REMOVE INVALID IMAGES
             image_file = os.path.join(self.dataset_dir, "imageNet_images", path.split('_')[0], path)
-            print(image_file)
-            if os.path.exists(image_file):
-                label = Image.open(os.path.join(self.dataset_dir, "imageNet_images", path.split('_')[0], path))
-            else:
-                print(image_file, "DOES NOT EXIST, OMITTING")
-                return 0, "_missing_"+path
-                # return 0, 0
 
+            if not os.path.exists(image_file):
+                print(f"{image_file} DOES NOT EXIST, MARKING FOR REMOVAL")
+                self.invalid_indices.append(index)
+                return None, path  # Returning None for invalid images
 
-                self.data.remove((path, index))
-
-                #Removing doesn't work, would only remove from loaded data
-                #need to generate list of missing images and stop them from loading
-                #where is getitem called here?
-                
-            #
-            #label = Image.open(os.path.join(self.dataset_dir, "imageNet_images", path.split('_')[0], path))
+            label = Image.open(image_file)
             if label.mode == 'L':
                 label = label.convert('RGB')
             if self.transform:
                 label = self.transform(label)
             else:
                 label = path
-            # print(f"{index} {path} {label.size()}")
         else:
             label = self.labels.index(self.data[index]["label"])
+
         if self.use_frequency_feat:
             feat = self.frequency_feat[index]
         else:
             eeg_data = self.data[index]["eeg_data"].float()
             feat = eeg_data[:, 40:440]
+        
         return feat, label
 
     def __len__(self):
         return len(self.data)
+
+    def cleanup_invalid_data(self):
+        """Remove all invalid indices from the dataset."""
+        if self.invalid_indices:
+            print(f"Removing {len(self.invalid_indices)} invalid entries from dataset.")
+            self.data = [self.data[i] for i in range(len(self.data)) if i not in self.invalid_indices]
+            self.invalid_indices = []  # Clear after cleanup
 
     def add_frequency_feat(self, feat):
         if len(feat) == len(self.data):

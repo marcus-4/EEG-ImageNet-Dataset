@@ -5,7 +5,7 @@ from torchvision import transforms
 import numpy as np
 from tqdm import tqdm
 from de_feat_cal import de_feat_cal
-from mdataset import EEGImageNetDataset
+from dataset import EEGImageNetDataset
 from model.mlp_sd import MLPMapper
 from utilities import *
 
