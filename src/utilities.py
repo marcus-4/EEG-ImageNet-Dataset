@@ -20,24 +20,30 @@ IMG_DIR = '../data/imageNet_images/'
 
 
 def wnid2category(wnid, language):
-    valid_params = ['ch', 'en']
+    valid_params = ['en']
     if language not in valid_params:
         raise ValueError(f"Invalid parameter. Expected one of: {valid_params}")
     with open(os.path.join(IMG_DIR, 'synset_map_' + language + '.txt')) as f:
         lines = f.readlines()
         for line in lines:
             if wnid in line:
-                return line.split()[1]
+                # print("---")
+                # print(line)
+                # print(line.split('\t')[1])
+                # print(line.split('\t')[0])
+                
+                return line.split('\t')[1].strip()
     raise ValueError(f"Could not find wnid: {wnid}")
 
 
 def category2wnid(category, language):
-    valid_params = ['ch', 'en']
+    valid_params = ['en']
     if language not in valid_params:
         raise ValueError(f"Invalid parameter. Expected one of: {valid_params}")
     with open(os.path.join(IMG_DIR, 'synset_map_' + language + '.txt')) as f:
         lines = f.readlines()
         for line in lines:
             if category in line:
-                return line.split()[0]
+                # return line.split()[0]
+                return line.split('\t')[0].strip()
     raise ValueError(f"Could not find category: {category}")

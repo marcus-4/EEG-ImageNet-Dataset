@@ -21,10 +21,13 @@ if __name__ == '__main__':
     dataset = EEGImageNetDataset(args)
     device = torch.device("cuda:7" if torch.cuda.is_available() else "cpu")
 
+    # lf=True
+    lf=False
+
     dic = {}
     blip_id = "Salesforce/blip-image-captioning-base"
-    processor = BlipProcessor.from_pretrained(blip_id, local_files_only=True)
-    model = BlipForConditionalGeneration.from_pretrained(blip_id, use_safetensors=True, local_files_only=True).to(
+    processor = BlipProcessor.from_pretrained(blip_id, local_files_only=lf)
+    model = BlipForConditionalGeneration.from_pretrained(blip_id, use_safetensors=True, local_files_only=lf).to(
         device)
     for image_name in tqdm(dataset.images):
         image_path = os.path.join("../data/imageNet_images", image_name.split("_")[0], image_name)
@@ -44,9 +47,9 @@ if __name__ == '__main__':
         with open(os.path.join(args.output_dir, "caption.txt"), "a") as f:
             f.write(f"{image_name}\t{caption}\n")
         tokenizer = CLIPTokenizer.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="tokenizer",
-                                                  local_files_only=True)
+                                                  local_files_only=lf)
         text_encoder = CLIPTextModel.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="text_encoder",
-                                                     use_safetensors=True, local_files_only=True).to(device)
+                                                     use_safetensors=True, local_files_only=lf).to(device)
         inputs = tokenizer(caption, padding="max_length", max_length=tokenizer.model_max_length, truncation=True,
                            return_tensors="pt").to(device)
         with torch.no_grad():

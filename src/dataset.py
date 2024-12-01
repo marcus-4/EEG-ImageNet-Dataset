@@ -3,6 +3,7 @@ import torch
 import os
 from PIL import Image
 from torch.utils.data import Dataset
+from process_images import convert_image
 
 class EEGImageNetDataset(Dataset):
     def __init__(self, args, transform=None):
@@ -36,11 +37,17 @@ class EEGImageNetDataset(Dataset):
         if self.use_image_label:
             path = self.data[index]["image"]
             image_file = os.path.join(self.dataset_dir, "imageNet_images", path.split('_')[0], path)
+            
+            # print("-----")
+            # print("imagefile: ", image_file)
+            # print("path: ", path)
+            # print("index: ", index)
 
             if not os.path.exists(image_file):
-                print(f"{image_file} DOES NOT EXIST, MARKING FOR REMOVAL")
-                self.invalid_indices.append(index)
-                return None, path  # Returning None for invalid images
+                # print(f"{image_file} DOES NOT EXIST, MARKING FOR REMOVAL")
+                if not convert_image(path):
+                    self.invalid_indices.append(index)
+                    return None, path  # Returning None for invalid images
 
             label = Image.open(image_file)
             if label.mode == 'L':

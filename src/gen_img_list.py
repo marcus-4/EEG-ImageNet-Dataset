@@ -36,7 +36,23 @@ if __name__ == '__main__':
 
     with open(os.path.join(args.output_dir, f"s{args.subject}_label.txt"), "w") as f:
         dataset.use_image_label = False
+        old_idx = 0
+        old_wnid = None  # Initialize with None to handle the first comparison
         for idx, data in enumerate(dataset):
-            if idx % 50 == 0:
-                label_wnid = dataset.labels[data[1]]
-                f.write(f"{idx + 1}-{idx + 50}: {wnid2category(label_wnid, 'ch')}\n")
+            label_wnid = dataset.labels[data[1]]
+
+            # When encountering a new wnid, write the previous range
+            if label_wnid != old_wnid and old_wnid is not None:
+                f.write(f"{old_idx}-{idx - 1}: {wnid2category(old_wnid, 'en')}\n")
+                old_idx = idx  # Start the next range
+                old_wnid = label_wnid  # Update to the new label
+
+            # Update the old_wnid for the first label
+            if old_wnid is None:
+                old_wnid = label_wnid
+
+        # Handle the final range
+        if old_wnid is not None:
+            f.write(f"{old_idx}-{len(dataset) - 1}: {wnid2category(old_wnid, 'en')}\n")
+        #Potential Off by 1 for categories but I'm not sure....
+
